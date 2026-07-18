@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #1C1C1E;
+  --fg: #F2F0EB;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  overscroll-behavior: none;
+}
+
+button {
+  font-family: inherit;
+  text-align: center;
+}
