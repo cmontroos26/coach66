@@ -3,58 +3,44 @@
 import { isDayLogged } from "@/logic/scheduler";
 import type { WeekGroup, ScheduleEntry, Logs } from "@/logic/scheduler";
 
-const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+// Mon–Sun column headers, shown once
+const DOW = ["M", "T", "W", "T", "F", "S", "S"];
 
-function getEntryStatus(entry: ScheduleEntry, logs: Logs) {
+type Status = "completed" | "today" | "missed" | "upcoming" | "rest" | "empty";
+
+function getStatus(entry: ScheduleEntry, logs: Logs): Status {
   const { dayPlan, programDay, isFuture, isToday } = entry;
-  const logged = !dayPlan.isRest && isDayLogged(programDay, logs);
-  let status: string;
-
-  if (dayPlan.isRest) {
-    status = "rest";
-  } else if (logged) {
-    status = isFuture ? "projected-done" : "completed";
-  } else if (isFuture) {
-    status = "projected-pending";
-  } else if (isToday) {
-    status = "today-pending";
-  } else {
-    status = "missed";
-  }
-
-  const classMap: Record<string, string> = {
-    completed:         "border-blue-500/60 bg-blue-500/10",
-    "projected-done":  "border-white/10 opacity-50",
-    "projected-pending": "border-white/10 opacity-50",
-    "today-pending":   "border-red-500/70 bg-red-500/10",
-    missed:            "border-red-500/40 bg-red-500/5 opacity-70",
-    rest:              "opacity-30",
-  };
-  const badgeMap: Record<string, string> = {
-    completed: "✓", "projected-done": "~", "projected-pending": "~",
-    "today-pending": "•", missed: "!", rest: "",
-  };
-
-  return { status, cls: classMap[status] || "", badge: badgeMap[status] || "" };
+  if (dayPlan.isRest) return "rest";
+  const logged = isDayLogged(programDay, logs);
+  if (logged) return "completed";
+  if (isToday) return "today";
+  if (isFuture) return "upcoming";
+  return "missed";
 }
 
-function clusterWeekDays(days: WeekGroup["days"]) {
-  type Cluster = { type: "rest" | "train"; cells: WeekGroup["days"] };
-  const clusters: Cluster[] = [];
-  let current: Cluster | null = null;
-  for (const cell of days) {
-    const isRestCell = !cell.entry || cell.entry.dayPlan.isRest;
-    if (isRestCell) {
-      if (current) { clusters.push(current); current = null; }
-      clusters.push({ type: "rest", cells: [cell] });
-    } else {
-      if (!current) current = { type: "train", cells: [] };
-      current.cells.push(cell);
-    }
-  }
-  if (current) clusters.push(current);
-  return clusters;
+// When month changes between weeks, emit a section label
+function withMonthBreaks(weeks: WeekGroup[]) {
+  let lastMonth = -1;
+  return weeks.map(week => {
+    const month = week.days[0].date.getMonth();
+    const showLabel = month !== lastMonth;
+    if (showLabel) lastMonth = month;
+    return {
+      week,
+      showLabel,
+      label: week.days[0].date.toLocaleDateString(undefined, { month: "long", year: "numeric" }).toUpperCase(),
+    };
+  });
 }
+
+const STATUS_STYLE: Record<Status, string> = {
+  completed: "bg-blue-500/25 text-blue-200",
+  today:     "bg-red-500/25 text-white ring-1 ring-red-500/80",
+  missed:    "bg-red-500/10 text-red-400/60",
+  upcoming:  "bg-white/[0.04] text-white/25",
+  rest:      "text-white/10",
+  empty:     "text-white/5",
+};
 
 interface ProgramGridProps {
   weeks: WeekGroup[];
@@ -64,65 +50,86 @@ interface ProgramGridProps {
 }
 
 export function ProgramGrid({ weeks, viewDateStr, logs, onGoToDate }: ProgramGridProps) {
+  const grouped = withMonthBreaks(weeks);
+
   return (
-    <div className="px-5 py-4">
-      <p className="text-[11px] tracking-[1.5px] text-neutral-600 uppercase mb-3">Full 66-Day Program</p>
+    <div className="px-5 pt-2 pb-6">
+      {/* Single column-header row */}
+      <div className="grid grid-cols-7 mb-2 px-0.5">
+        {DOW.map((d, i) => (
+          <p key={i} className="text-center text-[10px] font-bold tracking-widest text-neutral-700">
+            {d}
+          </p>
+        ))}
+      </div>
 
-      <div className="flex flex-col gap-4">
-        {weeks.map((week, wi) => {
-          const clusters = clusterWeekDays(week.days);
-          return (
-            <div key={wi}>
-              <p className="text-[11px] text-neutral-500 mb-1.5 tracking-wide">
-                Week {wi + 1} · {week.weekStart.toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+      <div className="flex flex-col gap-0.5">
+        {grouped.map(({ week, showLabel, label }, wi) => (
+          <div key={wi}>
+            {showLabel && (
+              <p className="text-[10px] font-bold tracking-[2px] text-neutral-600 uppercase mt-4 mb-2">
+                {label}
               </p>
-              <div className="flex items-stretch gap-1.5">
-                {clusters.map((cluster, ci) => (
-                  <div
-                    key={ci}
-                    className={cluster.type === "rest" ? "flex gap-1 flex-none" : "flex gap-1 flex-1"}
+            )}
+
+            <div className="grid grid-cols-7 gap-1">
+              {week.days.map(cell => {
+                // Days outside the program window
+                if (!cell.entry) {
+                  return (
+                    <div key={cell.dateStr} className="aspect-square flex items-center justify-center">
+                      <span className="text-[12px] font-bold tabular-nums text-white/5">
+                        {cell.date.getDate()}
+                      </span>
+                    </div>
+                  );
+                }
+
+                const { programDay } = cell.entry;
+                const status = getStatus(cell.entry, logs);
+                const isSelected = viewDateStr === cell.dateStr;
+                const isRest = cell.entry.dayPlan.isRest;
+
+                return (
+                  <button
+                    key={cell.dateStr}
+                    onClick={() => onGoToDate(programDay, cell.dateStr)}
+                    className={[
+                      "aspect-square rounded-lg flex items-center justify-center transition-all duration-150",
+                      isRest ? "cursor-default" : "active:scale-90",
+                      STATUS_STYLE[status],
+                      isSelected && !isRest
+                        ? "ring-2 ring-white ring-offset-2 ring-offset-[#1C1C1E]"
+                        : "",
+                    ].join(" ")}
                   >
-                    {cluster.cells.map(cell => {
-                      const dow = WEEKDAY_LABELS[cell.date.getDay() === 0 ? 6 : cell.date.getDay() - 1];
-                      if (!cell.entry) {
-                        return (
-                          <div key={cell.dateStr} className="flex flex-col items-center justify-center gap-0.5 px-0.5 py-2 rounded-md border border-white/5 opacity-25 min-h-12 w-6">
-                            <span className="text-[8px] tracking-wide text-neutral-500 font-bold">{dow}</span>
-                            <span className="text-[13px] font-extrabold text-white tabular-nums">{cell.date.getDate()}</span>
-                          </div>
-                        );
-                      }
-
-                      const { programDay } = cell.entry;
-                      const { cls, badge } = getEntryStatus(cell.entry, logs);
-                      const isRestCell = cell.entry.dayPlan.isRest;
-                      const isSelected = viewDateStr === cell.dateStr;
-
-                      return (
-                        <button
-                          key={cell.dateStr}
-                          onClick={() => onGoToDate(programDay, cell.dateStr)}
-                          className={[
-                            "relative flex flex-col items-center justify-center gap-0.5 py-2 rounded-md border transition-all",
-                            isRestCell ? "w-6 px-0.5 border-dashed border-white/10" : "flex-1 px-0.5 min-h-12",
-                            cls,
-                            isSelected ? "outline outline-2 outline-white" : "",
-                          ].join(" ")}
-                        >
-                          <span className="text-[8px] tracking-wide text-neutral-500 font-bold">{dow}</span>
-                          <span className="text-[13px] font-extrabold text-white tabular-nums">{cell.date.getDate()}</span>
-                          {badge && (
-                            <span className="absolute top-0.5 right-0.5 text-[9px] font-extrabold">{badge}</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
+                    <span className={[
+                      "tabular-nums font-bold leading-none",
+                      isRest ? "text-[10px]" : "text-[13px]",
+                    ].join(" ")}>
+                      {cell.date.getDate()}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
-          );
-        })}
+          </div>
+        ))}
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-4 mt-5 px-0.5">
+        {[
+          { cls: "bg-blue-500/25", label: "Done" },
+          { cls: "bg-red-500/25 ring-1 ring-red-500/80", label: "Today" },
+          { cls: "bg-red-500/10", label: "Missed" },
+          { cls: "bg-white/[0.04]", label: "Upcoming" },
+        ].map(({ cls, label }) => (
+          <div key={label} className="flex items-center gap-1.5">
+            <div className={`w-3 h-3 rounded-sm ${cls}`} />
+            <span className="text-[10px] text-neutral-600">{label}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
