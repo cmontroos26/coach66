@@ -98,9 +98,13 @@ export function ProgramGrid({ weeks, viewDateStr, todayStr, logs, onGoToDate }: 
                 const status = getStatus(cell.entry, logs);
                 const isRest = cell.entry.dayPlan.isRest;
 
+                const isDay1 = !isToday && programDay === 1;
+
                 // Today always overrides to red, regardless of rest/status
                 const cellClass = isToday
                   ? "bg-[#C1443C] text-white"
+                  : isDay1
+                  ? "bg-amber-500/40 text-amber-100 ring-1 ring-amber-400/60"
                   : {
                       completed: "bg-blue-500/20 text-blue-300",
                       missed:    "bg-white/[0.04] text-red-400/50",
@@ -142,10 +146,11 @@ export function ProgramGrid({ weeks, viewDateStr, todayStr, logs, onGoToDate }: 
       {/* Legend */}
       <div className="flex items-center gap-4 mt-5">
         {[
-          { cls: "bg-[#C1443C]",    label: "Today" },
-          { cls: "bg-blue-500/20",  label: "Done" },
+          { cls: "bg-[#C1443C]",        label: "Today" },
+          { cls: "bg-amber-500/40 ring-1 ring-amber-400/60", label: "Start" },
+          { cls: "bg-blue-500/20",       label: "Done" },
           { cls: "bg-white/[0.04] border border-red-500/20", label: "Missed" },
-          { cls: "bg-white/[0.04]", label: "Upcoming" },
+          { cls: "bg-white/[0.04]",      label: "Upcoming" },
         ].map(({ cls, label }) => (
           <div key={label} className="flex items-center gap-1.5">
             <div className={`w-2.5 h-2.5 rounded-sm ${cls}`} />

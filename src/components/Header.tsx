@@ -28,7 +28,7 @@ export function Header({
       <div className="flex items-start justify-between px-5 mb-4">
         <div>
           <p className="text-[10px] tracking-[2px] text-neutral-600 uppercase mb-1.5">
-            coach66
+            coach 66
           </p>
           <h1
             className="text-[26px] font-extrabold tracking-tight leading-none"
@@ -57,6 +57,7 @@ export function Header({
             {currentDayNumber && !isViewingToday && (
               <button
                 onClick={onGoToToday}
+                aria-label="Go to today's session"
                 className="text-[12px] font-semibold text-neutral-400 hover:text-white transition-colors"
               >
                 Today →
@@ -66,6 +67,7 @@ export function Header({
               onClick={() => {
                 if (window.confirm("Reset the whole 66-day program? This clears all logs.")) onReset();
               }}
+              aria-label="Reset program and clear all logs"
               className="text-[10px] font-bold tracking-[1.5px] uppercase text-neutral-600 hover:text-red-500 border border-white/[0.08] rounded px-2 py-1 transition-colors"
             >
               Reset

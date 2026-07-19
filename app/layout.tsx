@@ -2,13 +2,24 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "coach66",
+  title: "coach 66",
   description: "A 66-day comeback strength program. Concrete, chalk, iron.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "coach66",
+    title: "coach 66",
+  },
+  openGraph: {
+    title: "coach 66",
+    description: "A 66-day comeback strength program. Concrete, chalk, iron.",
+    type: "website",
+    siteName: "coach 66",
+  },
+  twitter: {
+    card: "summary",
+    title: "coach 66",
+    description: "A 66-day comeback strength program. Concrete, chalk, iron.",
   },
 };
 

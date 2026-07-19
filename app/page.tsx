@@ -35,8 +35,11 @@ function OnboardingScreen({ onStart }: { onStart: (dateStr: string) => void }) {
 
         {/* Date picker */}
         <div className="mb-4">
-          <p className="text-[11px] tracking-[2px] text-neutral-500 uppercase mb-2">Day 1 starts on</p>
+          <label htmlFor="start-date" className="block text-[11px] tracking-[2px] text-neutral-500 uppercase mb-2">
+            Day 1 starts on
+          </label>
           <input
+            id="start-date"
             type="date"
             value={pickedDate}
             onChange={e => setPickedDate(e.target.value)}
