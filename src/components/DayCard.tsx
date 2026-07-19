@@ -16,46 +16,48 @@ interface DayCardProps {
 export function DayCard({ plan, dayLogs, logs, onUpdateSet }: DayCardProps) {
   if (plan.isRest) {
     return (
-      <div className="px-5 py-4 max-w-2xl mx-auto">
-        <span className="inline-block text-[12px] tracking-[2px] text-neutral-500 border border-white/10 rounded px-3 py-1.5 mb-4 uppercase">
-          {plan.gymClosed ? "Rest Day · Gym Closed" : "Rest Day"}
-        </span>
-        <p className="text-[15px] text-neutral-300 leading-relaxed">
-          No lifting today. Walk, stretch, sleep well — recovery is part of the program, not a break from it.
+      <div className="px-5 pt-6 pb-12 max-w-2xl mx-auto">
+        <p className="text-[10px] tracking-[2px] text-neutral-600 uppercase mb-3">
+          {plan.gymClosed ? "Rest · Gym closed" : "Rest day"}
+        </p>
+        <p className="text-[15px] text-neutral-400 leading-relaxed">
+          No lifting today. Walk, stretch, sleep well.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="px-5 pb-10 max-w-2xl mx-auto">
-      <div className="flex items-center gap-3 mt-3 mb-1">
-        <h2 className="text-[24px] font-extrabold tracking-wide text-white">
-          {plan.testDay ? "TEST DAY" : TYPE_LABEL[plan.type].toUpperCase()}
+    <div className="px-5 pt-5 pb-16 max-w-2xl mx-auto">
+      {/* Day header */}
+      <div className="flex items-center gap-2.5 mb-1">
+        <h2 className="text-[20px] font-extrabold tracking-tight text-white">
+          {plan.testDay ? "Test Day" : TYPE_LABEL[plan.type]}
         </h2>
         {plan.deload && (
-          <span className="text-[11px] tracking-wide text-[#1C1C1E] bg-amber-400 rounded px-2 py-0.5 font-bold uppercase">
+          <span className="text-[9px] font-bold tracking-widest text-[#1C1C1E] bg-amber-400 rounded-sm px-1.5 py-0.5 uppercase">
             Deload
           </span>
         )}
       </div>
 
-      <p className="text-[13px] text-neutral-500 mb-5">{plan.phase.blurb}</p>
-
-      {plan.exercises.map(ex => (
-        <ExerciseBlock
-          key={ex.id}
-          exercise={ex}
-          loggedSets={dayLogs?.[ex.id] || []}
-          suggestion={suggestWeight(ex.id, ex.reps, logs)}
-          onChangeSet={(setIndex, field, value) => onUpdateSet(plan.day, ex.id, setIndex, field, value)}
-        />
-      ))}
+      {/* Exercises */}
+      <div className="mt-4">
+        {plan.exercises.map(ex => (
+          <ExerciseBlock
+            key={ex.id}
+            exercise={ex}
+            loggedSets={dayLogs?.[ex.id] || []}
+            suggestion={suggestWeight(ex.id, ex.reps, logs)}
+            onChangeSet={(setIndex, field, value) => onUpdateSet(plan.day, ex.id, setIndex, field, value)}
+          />
+        ))}
+      </div>
 
       {plan.finisher && (
-        <div className="mt-2 text-[13px] text-neutral-200 bg-[#242629] rounded-xl p-3.5 border-l-[3px] border-blue-500">
+        <p className="mt-6 text-[12px] text-neutral-500 leading-relaxed border-l-2 border-blue-500/40 pl-3">
           {plan.finisher}
-        </div>
+        </p>
       )}
     </div>
   );

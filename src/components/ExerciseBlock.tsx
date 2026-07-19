@@ -15,18 +15,19 @@ function LoggedLine({ noWeight, unit, weight, reps }: {
 }) {
   if (weight !== null && reps !== null) {
     return (
-      <div className="mt-3 text-[13px] text-green-400 bg-green-400/10 border border-green-400/30 rounded-md px-3 py-2">
-        ✓ Logged: <strong>{!noWeight && <>{weight} {unit} × </>}{reps} reps</strong>
-      </div>
+      <p className="mt-2 text-[12px] text-green-400/90 font-medium">
+        ✓ {!noWeight && <>{weight} {unit} × </>}{reps} reps
+      </p>
     );
   }
-  if (!noWeight && weight !== null && reps === null) {
-    return <div className="mt-3 text-[12px] text-amber-400 bg-amber-400/8 border border-amber-400/25 rounded-md px-3 py-2">Weight logged — tap reps to finish this set</div>;
+  if (weight !== null || reps !== null) {
+    return (
+      <p className="mt-2 text-[12px] text-amber-500/70">
+        {weight !== null ? "weight set — tap reps" : "reps set — tap weight"}
+      </p>
+    );
   }
-  if (!noWeight && weight === null && reps !== null) {
-    return <div className="mt-3 text-[12px] text-amber-400 bg-amber-400/8 border border-amber-400/25 rounded-md px-3 py-2">Reps logged — tap weight to finish this set</div>;
-  }
-  return <div className="mt-3 text-[12px] text-neutral-600 px-3 py-2">Not logged yet — tap {noWeight ? "reps" : "weight, then reps"} above</div>;
+  return null;
 }
 
 interface ExerciseBlockProps {
@@ -50,38 +51,36 @@ export function ExerciseBlock({ exercise, loggedSets, suggestion, onChangeSet }:
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25 }}
-      className="bg-[#242629] rounded-xl p-4 mb-3"
+      transition={{ duration: 0.2 }}
+      className="py-4 border-b border-white/[0.06] last:border-0"
     >
       {/* Exercise header */}
-      <div className="flex items-start gap-3 mb-1">
-        <div className="w-10 h-10 rounded-lg bg-[#1E2023] text-amber-400 flex items-center justify-center flex-shrink-0">
+      <div className="flex items-center gap-3 mb-2">
+        <div className="w-8 h-8 rounded-lg bg-white/[0.04] text-amber-400/80 flex items-center justify-center flex-shrink-0">
           <StickFigure exerciseId={exercise.id} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-bold text-white leading-tight">{exercise.name}</p>
-          <p className="text-[12px] text-neutral-500 tabular-nums">
-            {exercise.sets} × {exercise.reps} · RPE {exercise.rpe} · rest {exercise.rest}
+          <p className="text-[14px] font-semibold text-white leading-tight">{exercise.name}</p>
+          <p className="text-[11px] text-neutral-600 tabular-nums mt-0.5">
+            {exercise.sets} × {exercise.reps} &nbsp;·&nbsp; RPE {exercise.rpe} &nbsp;·&nbsp; {exercise.rest}
           </p>
         </div>
       </div>
 
       {exercise.note && (
-        <p className="text-[12px] text-neutral-400 italic mb-3 mt-1">{exercise.note}</p>
+        <p className="text-[11px] text-neutral-600 italic mb-2 pl-11">{exercise.note}</p>
       )}
 
-      {!noWeight && (
-        <p className="text-[12px] text-amber-400 mb-3">
-          {suggestion.value !== null
-            ? <>Suggested: <strong>{suggestion.value} {exercise.unit}</strong> — {suggestion.reason}</>
-            : "First time — tap what feels right, ringed chip is a reasonable starting guess."}
+      {!noWeight && suggestion.value !== null && (
+        <p className="text-[11px] text-amber-500/70 mb-3 pl-11">
+          {suggestion.value} {exercise.unit} — {suggestion.reason}
         </p>
       )}
 
       {/* Sets */}
-      <div className="flex flex-col gap-4 mt-2">
+      <div className="flex flex-col gap-5 mt-3 pl-11">
         {setsArray.map((s, i) => {
           const prevSet = i > 0 ? setsArray[i - 1] : null;
           const currentWeight = s.weight === "" ? null : parseFloat(s.weight);
@@ -89,75 +88,82 @@ export function ExerciseBlock({ exercise, loggedSets, suggestion, onChangeSet }:
           const setTarget = setPrescription(exercise.sets, base, step, repLo, repHi, i);
 
           return (
-            <div key={i} className="bg-[#1E2023] rounded-lg p-3">
-              {/* Set label row */}
-              <div className="flex flex-wrap items-center gap-2 mb-3">
-                <span className="text-[11px] tracking-widest text-neutral-500 font-bold uppercase">
-                  Set {i + 1} <span className="text-[9px] text-neutral-600">{setTarget.label.toUpperCase()}</span>
+            <div key={i}>
+              {/* Set label */}
+              <div className="flex items-baseline gap-2 mb-2">
+                <span className="text-[10px] font-bold tracking-widest text-neutral-600 uppercase">
+                  Set {i + 1}
                 </span>
-                <span className="text-[12px] text-amber-400 font-semibold ml-auto tabular-nums">
-                  Target: {!noWeight && <>{setTarget.weight} {exercise.unit} × </>}{setTarget.reps} reps
+                <span className="text-[10px] text-neutral-700 uppercase tracking-wide">
+                  {setTarget.label}
+                </span>
+                <span className="ml-auto text-[11px] text-neutral-600 tabular-nums">
+                  {!noWeight && <>{setTarget.weight} {exercise.unit} × </>}{setTarget.reps}
                 </span>
                 {i > 0 && prevSet?.weight && (
                   <button
                     onClick={() => onChangeSet(i, "weight", prevSet.weight)}
-                    className="text-[11px] text-neutral-400 border border-white/10 rounded-full px-2.5 py-1 hover:bg-white/5 transition-colors"
+                    className="text-[10px] text-neutral-700 hover:text-neutral-400 transition-colors"
                   >
-                    ↳ same as set {i}
+                    ↳ copy
                   </button>
                 )}
               </div>
 
               {/* Weight chips */}
               {!noWeight && (
-                <>
-                  <p className="text-[10px] tracking-widest text-neutral-600 uppercase mb-1.5">Weight ({exercise.unit})</p>
-                  <div className="flex gap-2 mb-3">
-                    {weightChips.map(v => (
+                <div className="flex gap-1.5 mb-2">
+                  {weightChips.map(v => {
+                    const isSelected = currentWeight === v;
+                    const isTarget   = v === setTarget.weight;
+                    return (
                       <button
                         key={v}
                         onClick={() => onChangeSet(i, "weight", String(v))}
                         className={[
-                          "relative flex-1 rounded-lg py-3.5 text-[15px] font-bold tabular-nums transition-all",
-                          currentWeight === v
-                            ? "bg-red-500 border-2 border-red-500 text-white"
-                            : v === setTarget.weight
-                            ? "bg-[#2A2C30] border-2 border-amber-400 text-white"
-                            : "bg-[#2A2C30] border border-white/10 text-white hover:border-white/25",
+                          "relative flex-1 rounded-lg py-3 text-[14px] font-bold tabular-nums transition-all active:scale-95",
+                          isSelected
+                            ? "bg-white text-[#1C1C1E]"
+                            : isTarget
+                            ? "bg-white/[0.06] text-white ring-1 ring-white/20"
+                            : "bg-white/[0.03] text-neutral-500 hover:bg-white/[0.06] hover:text-white",
                         ].join(" ")}
                       >
                         {v}
-                        {v === setTarget.weight && currentWeight !== v && (
-                          <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-400" />
+                        {isTarget && !isSelected && (
+                          <span className="absolute top-1 right-1 w-1 h-1 rounded-full bg-amber-400" />
                         )}
                       </button>
-                    ))}
-                  </div>
-                </>
+                    );
+                  })}
+                </div>
               )}
 
               {/* Rep chips */}
-              <p className="text-[10px] tracking-widest text-neutral-600 uppercase mb-1.5">Reps</p>
-              <div className="flex flex-wrap gap-2">
-                {repChips.map(v => (
-                  <button
-                    key={v}
-                    onClick={() => onChangeSet(i, "reps", String(v))}
-                    className={[
-                      "relative w-11 rounded-lg py-3 text-[15px] font-bold tabular-nums transition-all",
-                      currentReps === v
-                        ? "bg-red-500 border-2 border-red-500 text-white"
-                        : v === setTarget.reps
-                        ? "bg-[#2A2C30] border-2 border-amber-400 text-white"
-                        : "bg-[#2A2C30] border border-white/10 text-white hover:border-white/25",
-                    ].join(" ")}
-                  >
-                    {v}
-                    {v === setTarget.reps && currentReps !== v && (
-                      <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-400" />
-                    )}
-                  </button>
-                ))}
+              <div className="flex flex-wrap gap-1.5">
+                {repChips.map(v => {
+                  const isSelected = currentReps === v;
+                  const isTarget   = v === setTarget.reps;
+                  return (
+                    <button
+                      key={v}
+                      onClick={() => onChangeSet(i, "reps", String(v))}
+                      className={[
+                        "relative w-10 rounded-lg py-2.5 text-[14px] font-bold tabular-nums transition-all active:scale-95",
+                        isSelected
+                          ? "bg-white text-[#1C1C1E]"
+                          : isTarget
+                          ? "bg-white/[0.06] text-white ring-1 ring-white/20"
+                          : "bg-white/[0.03] text-neutral-500 hover:bg-white/[0.06] hover:text-white",
+                      ].join(" ")}
+                    >
+                      {v}
+                      {isTarget && !isSelected && (
+                        <span className="absolute top-1 right-1 w-1 h-1 rounded-full bg-amber-400" />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
 
               <LoggedLine noWeight={noWeight} unit={exercise.unit} weight={currentWeight} reps={currentReps} />

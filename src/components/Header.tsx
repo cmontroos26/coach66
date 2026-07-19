@@ -19,44 +19,77 @@ export function Header({
   currentDayNumber, viewDay, viewDateStr, todayStr,
   completedCount, phase, saveError, onGoToToday, onReset,
 }: HeaderProps) {
-  return (
-    <header className="flex flex-wrap items-start justify-between gap-3 px-5 py-5 border-b border-white/[0.07]">
-      <div>
-        <p className="text-[11px] tracking-[1.5px] text-neutral-500 mb-1 uppercase">
-          Digital Coach · Day {viewDay} of {TOTAL_DAYS}
-        </p>
-        <h1 className="text-[22px] font-extrabold tracking-wide" style={{ color: phase.color }}>
-          {phase.label.toUpperCase()}
-        </h1>
-      </div>
+  const isViewingToday = viewDateStr === todayStr;
+  const progress = Math.round((completedCount / TOTAL_DAYS) * 100);
 
-      <div className="flex items-center gap-3">
-        <div className="text-center">
-          <div className="text-[20px] font-extrabold tabular-nums text-white">{completedCount}</div>
-          <div className="text-[10px] tracking-widest text-neutral-500 uppercase">logged</div>
+  return (
+    <header className="pt-6 pb-0 border-b border-white/[0.06]">
+      {/* Main row */}
+      <div className="flex items-start justify-between px-5 mb-4">
+        <div>
+          <p className="text-[10px] tracking-[2px] text-neutral-600 uppercase mb-1.5">
+            coach66
+          </p>
+          <h1
+            className="text-[26px] font-extrabold tracking-tight leading-none"
+            style={{ color: phase.color }}
+          >
+            {phase.label}
+          </h1>
+          <p className="text-[12px] text-neutral-600 mt-1.5 leading-snug max-w-[200px]">
+            {phase.blurb}
+          </p>
         </div>
 
-        {currentDayNumber && viewDateStr !== todayStr && (
-          <button
-            onClick={onGoToToday}
-            className="text-[12px] px-3 py-2 rounded border border-blue-500/60 text-white bg-transparent hover:bg-blue-500/10 transition-colors"
-          >
-            Today →
-          </button>
-        )}
+        <div className="flex flex-col items-end gap-3 pt-1">
+          {/* Day counter */}
+          <div className="text-right">
+            <span className="text-[28px] font-extrabold tabular-nums text-white leading-none">
+              {viewDay}
+            </span>
+            <span className="text-[14px] font-bold text-neutral-600 tabular-nums">
+              {" "}/ {TOTAL_DAYS}
+            </span>
+          </div>
 
-        <button
-          onClick={() => {
-            if (window.confirm("Reset the whole 66-day program? This clears all logs.")) onReset();
-          }}
-          className="text-[12px] px-3 py-2 rounded border border-white/10 text-neutral-400 bg-transparent hover:bg-white/5 transition-colors"
-        >
-          Reset
-        </button>
+          {/* Actions */}
+          <div className="flex items-center gap-3">
+            {currentDayNumber && !isViewingToday && (
+              <button
+                onClick={onGoToToday}
+                className="text-[12px] font-semibold text-neutral-400 hover:text-white transition-colors"
+              >
+                Today →
+              </button>
+            )}
+            <button
+              onClick={() => {
+                if (window.confirm("Reset the whole 66-day program? This clears all logs.")) onReset();
+              }}
+              className="text-[18px] leading-none text-neutral-700 hover:text-neutral-400 transition-colors"
+              title="Reset program"
+            >
+              ···
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="px-5 mb-px flex items-center gap-3">
+        <div className="flex-1 h-px bg-white/[0.06] relative overflow-hidden rounded-full">
+          <div
+            className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
+            style={{ width: `${progress}%`, background: phase.color, opacity: 0.7 }}
+          />
+        </div>
+        <span className="text-[10px] tabular-nums text-neutral-600 flex-none">
+          {completedCount} done
+        </span>
       </div>
 
       {saveError && (
-        <p className="w-full text-[11px] text-red-400 mt-1">
+        <p className="px-5 pt-2 text-[11px] text-red-400">
           Could not save — your last change may not persist.
         </p>
       )}
