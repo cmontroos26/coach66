@@ -240,10 +240,13 @@ const TEST_FULL: Exercise[] = [
   { id: "squat", name: "Back Squat — Final Test",          unit: "kg", defaultWeight: 50, step: 2.5, category: "compound" },
   { id: "rdl",   name: "Romanian Deadlift — Final Test",   unit: "kg", defaultWeight: 40, step: 2.5, category: "compound" },
 ];
+// Day 62: rotation = legsCore, but day 61 = upper → legs are recovered → test LOWER
+// Day 64: rotation = push, day 63 = rest, day 61 = upper (3 days ago) → test UPPER
+// Day 66: final benchmark — all three lifts
 function testLiftsForDay(day: number): Exercise[] {
-  if (day === 62) return TEST_UPPER;
-  if (day === 64) return TEST_LOWER;
-  return TEST_FULL; // day 66
+  if (day === 62) return TEST_LOWER;
+  if (day === 64) return TEST_UPPER;
+  return TEST_FULL;
 }
 
 // ─── Prescription logic ───────────────────────────────────────────────────────
