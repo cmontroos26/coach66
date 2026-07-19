@@ -58,7 +58,7 @@ export function ExerciseBlock({ exercise, loggedSets, suggestion, onChangeSet }:
     >
       {/* Exercise header */}
       <div className="flex items-center gap-3 mb-2">
-        <div className="w-8 h-8 rounded-lg bg-white/[0.04] text-amber-400/80 flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-white/[0.04] text-amber-400/90 flex items-center justify-center flex-shrink-0 overflow-hidden">
           <StickFigure exerciseId={exercise.id} />
         </div>
         <div className="flex-1 min-w-0">
@@ -70,17 +70,17 @@ export function ExerciseBlock({ exercise, loggedSets, suggestion, onChangeSet }:
       </div>
 
       {exercise.note && (
-        <p className="text-[11px] text-neutral-600 italic mb-2 pl-11">{exercise.note}</p>
+        <p className="text-[11px] text-neutral-600 italic mb-2 pl-13">{exercise.note}</p>
       )}
 
       {!noWeight && suggestion.value !== null && (
-        <p className="text-[11px] text-amber-500/70 mb-3 pl-11">
+        <p className="text-[11px] text-amber-500/70 mb-3 pl-13">
           {suggestion.value} {exercise.unit} — {suggestion.reason}
         </p>
       )}
 
       {/* Sets */}
-      <div className="flex flex-col gap-5 mt-3 pl-11">
+      <div className="flex flex-col gap-5 mt-3 pl-13">
         {setsArray.map((s, i) => {
           const prevSet = i > 0 ? setsArray[i - 1] : null;
           const currentWeight = s.weight === "" ? null : parseFloat(s.weight);
