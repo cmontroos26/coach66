@@ -81,10 +81,16 @@ export function simulateSchedule(
   return entries;
 }
 
-export function groupIntoWeeks(entries: ScheduleEntry[]): WeekGroup[] {
+export function groupIntoWeeks(entries: ScheduleEntry[], displayFrom?: Date): WeekGroup[] {
   if (!entries.length) return [];
   const lastDate = entries[entries.length - 1].date;
-  let cursorMonday = getWeekBounds(entries[0].date).monday;
+  const firstEntryMonday = getWeekBounds(entries[0].date).monday;
+  const displayMonday = displayFrom ? getWeekBounds(displayFrom).monday : firstEntryMonday;
+  // Start from whichever week is earlier — ensures today is always visible
+  // even when today is before the program start date.
+  let cursorMonday = displayMonday.getTime() < firstEntryMonday.getTime()
+    ? displayMonday
+    : firstEntryMonday;
   const weeks: WeekGroup[] = [];
 
   while (cursorMonday.getTime() <= lastDate.getTime()) {

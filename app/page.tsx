@@ -77,7 +77,7 @@ export default function Home() {
     [startDate, logs, farEnd],
   );
 
-  const programWeeks = useMemo(() => groupIntoWeeks(fullScheduleEntries), [fullScheduleEntries]);
+  const programWeeks = useMemo(() => groupIntoWeeks(fullScheduleEntries, new Date()), [fullScheduleEntries]);
 
   const todayScheduleEntry = fullScheduleEntries.find(e => e.isToday);
   const currentDayNumber = startDate
