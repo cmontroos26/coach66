@@ -21,7 +21,7 @@ interface CoachStore {
   saveError: boolean;
 
   hydrate: () => Promise<void>;
-  startProgram: () => void;
+  startProgram: (dateStr?: string) => void;
   resetProgram: () => void;
   updateSet: (day: number, exerciseId: string, setIndex: number, field: "weight" | "reps", value: string) => void;
   goToDate: (programDay: number, dateStr: string) => void;
@@ -59,11 +59,12 @@ export const useCoachStore = create<CoachStore>((set, get) => ({
     }
   },
 
-  startProgram: () => {
+  startProgram: (dateStr?: string) => {
+    const chosen = dateStr ?? isoDate(new Date());
     const today = isoDate(new Date());
-    set({ startDate: today, viewDay: 1, viewDateStr: today });
+    set({ startDate: chosen, viewDay: 1, viewDateStr: today });
     const { logs } = get();
-    persist(today, logs, v => set({ saveError: v }));
+    persist(chosen, logs, v => set({ saveError: v }));
   },
 
   resetProgram: () => {

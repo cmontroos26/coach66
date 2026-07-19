@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useCoachStore } from "@/store/useCoachStore";
 import { Header } from "@/components/Header";
@@ -8,6 +8,52 @@ import { ProgramGrid } from "@/components/ProgramGrid";
 import { DayCard } from "@/components/DayCard";
 import { buildDayPlan, TOTAL_DAYS } from "@/logic/program";
 import { simulateSchedule, groupIntoWeeks, isoDate, isDayLogged } from "@/logic/scheduler";
+
+function OnboardingScreen({ onStart }: { onStart: (dateStr: string) => void }) {
+  const todayStr = isoDate(new Date());
+  const [pickedDate, setPickedDate] = useState(todayStr);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-sm text-center"
+      >
+        <p className="text-[12px] tracking-[4px] text-neutral-500 uppercase mb-3">Digital Coach</p>
+        <h1 className="text-[120px] font-extrabold leading-none tabular-nums text-white mb-2">66</h1>
+        <p className="text-[15px] text-neutral-400 leading-relaxed mb-8">
+          A comeback program. Full gym, 20 years of history, one year off. Time to reload.
+        </p>
+        <ul className="text-left text-[14px] text-neutral-300 flex flex-col gap-2.5 mb-10 list-none p-0">
+          <li><strong>Days 1–9</strong> — Reactivation: groove the movement</li>
+          <li><strong>Days 10–33</strong> — Rebuild: volume, progressive overload</li>
+          <li><strong>Days 34–57</strong> — Intensify: heavier, conditioning added</li>
+          <li><strong>Days 58–66</strong> — Peak &amp; Test: taper, retest your lifts</li>
+        </ul>
+
+        {/* Date picker */}
+        <div className="mb-4">
+          <p className="text-[11px] tracking-[2px] text-neutral-500 uppercase mb-2">Day 1 starts on</p>
+          <input
+            type="date"
+            value={pickedDate}
+            onChange={e => setPickedDate(e.target.value)}
+            className="w-full bg-white/[0.06] text-white text-[16px] font-semibold text-center py-3 rounded-lg border border-white/[0.1] focus:outline-none focus:border-white/30 [color-scheme:dark]"
+          />
+        </div>
+
+        <button
+          onClick={() => onStart(pickedDate)}
+          className="w-full bg-[#C1443C] text-white font-bold text-[16px] tracking-wide py-4 rounded-lg active:scale-[0.98] transition-all"
+        >
+          {pickedDate === todayStr ? "Start Day 1 — Today" : `Start Day 1 — ${new Date(pickedDate + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" })}`}
+        </button>
+      </motion.div>
+    </div>
+  );
+}
 
 export default function Home() {
   const {
@@ -60,34 +106,7 @@ export default function Home() {
   }
 
   if (!startDate) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="w-full max-w-sm text-center"
-        >
-          <p className="text-[12px] tracking-[4px] text-neutral-500 uppercase mb-3">Digital Coach</p>
-          <h1 className="text-[120px] font-extrabold leading-none tabular-nums text-white mb-2">66</h1>
-          <p className="text-[15px] text-neutral-400 leading-relaxed mb-8">
-            A comeback program. Full gym, 20 years of history, one year off. Time to reload.
-          </p>
-          <ul className="text-left text-[14px] text-neutral-300 flex flex-col gap-2.5 mb-10 list-none p-0">
-            <li><strong>Days 1–9</strong> — Reactivation: groove the movement</li>
-            <li><strong>Days 10–33</strong> — Rebuild: volume, progressive overload</li>
-            <li><strong>Days 34–57</strong> — Intensify: heavier, conditioning added</li>
-            <li><strong>Days 58–66</strong> — Peak &amp; Test: taper, retest your lifts</li>
-          </ul>
-          <button
-            onClick={startProgram}
-            className="w-full bg-red-500 text-white font-bold text-[16px] tracking-wide py-4 rounded-lg hover:bg-red-600 active:scale-[0.98] transition-all"
-          >
-            Start Day 1 — Today
-          </button>
-        </motion.div>
-      </div>
-    );
+    return <OnboardingScreen onStart={startProgram} />;
   }
 
   return (
