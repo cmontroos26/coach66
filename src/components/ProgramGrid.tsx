@@ -1,12 +1,12 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { isDayLogged } from "@/logic/scheduler";
 import type { WeekGroup, ScheduleEntry, Logs } from "@/logic/scheduler";
 
-// Mon–Sun column headers, shown once
 const DOW = ["M", "T", "W", "T", "F", "S", "S"];
 
-type Status = "completed" | "today" | "missed" | "upcoming" | "rest" | "empty";
+type Status = "completed" | "today" | "missed" | "upcoming" | "rest";
 
 function getStatus(entry: ScheduleEntry, logs: Logs): Status {
   const { dayPlan, programDay, isFuture, isToday } = entry;
@@ -18,7 +18,6 @@ function getStatus(entry: ScheduleEntry, logs: Logs): Status {
   return "missed";
 }
 
-// When month changes between weeks, emit a section label
 function withMonthBreaks(weeks: WeekGroup[]) {
   let lastMonth = -1;
   return weeks.map(week => {
@@ -33,15 +32,6 @@ function withMonthBreaks(weeks: WeekGroup[]) {
   });
 }
 
-const STATUS_STYLE: Record<Status, string> = {
-  completed: "bg-blue-500/25 text-blue-200",
-  today:     "bg-red-500/25 text-white ring-1 ring-red-500/80",
-  missed:    "bg-red-500/10 text-red-400/60",
-  upcoming:  "bg-white/[0.04] text-white/25",
-  rest:      "text-white/10",
-  empty:     "text-white/5",
-};
-
 interface ProgramGridProps {
   weeks: WeekGroup[];
   viewDateStr: string | null;
@@ -51,11 +41,17 @@ interface ProgramGridProps {
 
 export function ProgramGrid({ weeks, viewDateStr, logs, onGoToDate }: ProgramGridProps) {
   const grouped = withMonthBreaks(weeks);
+  const todayRef = useRef<HTMLButtonElement>(null);
+
+  // Scroll today into view once on mount
+  useEffect(() => {
+    todayRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, []);
 
   return (
     <div className="px-5 pt-2 pb-6">
-      {/* Single column-header row */}
-      <div className="grid grid-cols-7 mb-2 px-0.5">
+      {/* Column headers */}
+      <div className="grid grid-cols-7 mb-2">
         {DOW.map((d, i) => (
           <p key={i} className="text-center text-[10px] font-bold tracking-widest text-neutral-700">
             {d}
@@ -74,11 +70,11 @@ export function ProgramGrid({ weeks, viewDateStr, logs, onGoToDate }: ProgramGri
 
             <div className="grid grid-cols-7 gap-1">
               {week.days.map(cell => {
-                // Days outside the program window
+                // Outside program window
                 if (!cell.entry) {
                   return (
                     <div key={cell.dateStr} className="aspect-square flex items-center justify-center">
-                      <span className="text-[12px] font-bold tabular-nums text-white/5">
+                      <span className="text-[11px] tabular-nums text-white/[0.06]">
                         {cell.date.getDate()}
                       </span>
                     </div>
@@ -87,28 +83,42 @@ export function ProgramGrid({ weeks, viewDateStr, logs, onGoToDate }: ProgramGri
 
                 const { programDay } = cell.entry;
                 const status = getStatus(cell.entry, logs);
+                const isToday = status === "today";
                 const isSelected = viewDateStr === cell.dateStr;
                 const isRest = cell.entry.dayPlan.isRest;
+
+                const cellClass = {
+                  completed: "bg-blue-500/20 text-blue-300",
+                  today:     "bg-[#C1443C] text-white",
+                  missed:    "bg-white/[0.04] text-red-400/50",
+                  upcoming:  "bg-white/[0.04] text-white/30",
+                  rest:      "text-white/[0.08]",
+                }[status];
 
                 return (
                   <button
                     key={cell.dateStr}
+                    ref={isToday ? todayRef : undefined}
                     onClick={() => onGoToDate(programDay, cell.dateStr)}
                     className={[
-                      "aspect-square rounded-lg flex items-center justify-center transition-all duration-150",
+                      "relative aspect-square rounded-lg flex flex-col items-center justify-center transition-all duration-150",
                       isRest ? "cursor-default" : "active:scale-90",
-                      STATUS_STYLE[status],
+                      cellClass,
                       isSelected && !isRest
-                        ? "ring-2 ring-white ring-offset-2 ring-offset-[#1C1C1E]"
+                        ? "ring-2 ring-white/70 ring-offset-1 ring-offset-[#1C1C1E]"
                         : "",
                     ].join(" ")}
                   >
                     <span className={[
                       "tabular-nums font-bold leading-none",
-                      isRest ? "text-[10px]" : "text-[13px]",
+                      isToday ? "text-[14px]" : isRest ? "text-[10px]" : "text-[13px]",
                     ].join(" ")}>
                       {cell.date.getDate()}
                     </span>
+                    {/* Dot under the date for today */}
+                    {isToday && (
+                      <span className="w-1 h-1 rounded-full bg-white/60 mt-1" />
+                    )}
                   </button>
                 );
               })}
@@ -118,15 +128,15 @@ export function ProgramGrid({ weeks, viewDateStr, logs, onGoToDate }: ProgramGri
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 mt-5 px-0.5">
+      <div className="flex items-center gap-4 mt-5">
         {[
-          { cls: "bg-blue-500/25", label: "Done" },
-          { cls: "bg-red-500/25 ring-1 ring-red-500/80", label: "Today" },
-          { cls: "bg-red-500/10", label: "Missed" },
+          { cls: "bg-[#C1443C]",    label: "Today" },
+          { cls: "bg-blue-500/20",  label: "Done" },
+          { cls: "bg-white/[0.04] border border-red-500/20", label: "Missed" },
           { cls: "bg-white/[0.04]", label: "Upcoming" },
         ].map(({ cls, label }) => (
           <div key={label} className="flex items-center gap-1.5">
-            <div className={`w-3 h-3 rounded-sm ${cls}`} />
+            <div className={`w-2.5 h-2.5 rounded-sm ${cls}`} />
             <span className="text-[10px] text-neutral-600">{label}</span>
           </div>
         ))}
