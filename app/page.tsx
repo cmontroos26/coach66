@@ -125,6 +125,7 @@ export default function Home() {
       <ProgramGrid
         weeks={programWeeks}
         viewDateStr={viewDateStr}
+        todayStr={todayStr}
         logs={logs}
         onGoToDate={goToDate}
       />

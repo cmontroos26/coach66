@@ -6,14 +6,12 @@ import type { WeekGroup, ScheduleEntry, Logs } from "@/logic/scheduler";
 
 const DOW = ["M", "T", "W", "T", "F", "S", "S"];
 
-type Status = "completed" | "today" | "missed" | "upcoming" | "rest";
+type Status = "completed" | "missed" | "upcoming" | "rest";
 
 function getStatus(entry: ScheduleEntry, logs: Logs): Status {
-  const { dayPlan, programDay, isFuture, isToday } = entry;
+  const { dayPlan, programDay, isFuture } = entry;
   if (dayPlan.isRest) return "rest";
-  const logged = isDayLogged(programDay, logs);
-  if (logged) return "completed";
-  if (isToday) return "today";
+  if (isDayLogged(programDay, logs)) return "completed";
   if (isFuture) return "upcoming";
   return "missed";
 }
@@ -35,15 +33,15 @@ function withMonthBreaks(weeks: WeekGroup[]) {
 interface ProgramGridProps {
   weeks: WeekGroup[];
   viewDateStr: string | null;
+  todayStr: string;
   logs: Logs;
   onGoToDate: (programDay: number, dateStr: string) => void;
 }
 
-export function ProgramGrid({ weeks, viewDateStr, logs, onGoToDate }: ProgramGridProps) {
+export function ProgramGrid({ weeks, viewDateStr, todayStr, logs, onGoToDate }: ProgramGridProps) {
   const grouped = withMonthBreaks(weeks);
-  const todayRef = useRef<HTMLButtonElement>(null);
+  const todayRef = useRef<HTMLElement>(null);
 
-  // Scroll today into view once on mount
   useEffect(() => {
     todayRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
   }, []);
@@ -70,41 +68,56 @@ export function ProgramGrid({ weeks, viewDateStr, logs, onGoToDate }: ProgramGri
 
             <div className="grid grid-cols-7 gap-1">
               {week.days.map(cell => {
+                // isToday is always derived from the actual date, never from schedule status
+                const isToday = cell.dateStr === todayStr;
+                const isSelected = viewDateStr === cell.dateStr;
+
                 // Outside program window
                 if (!cell.entry) {
                   return (
-                    <div key={cell.dateStr} className="aspect-square flex items-center justify-center">
-                      <span className="text-[11px] tabular-nums text-white/[0.06]">
+                    <div
+                      key={cell.dateStr}
+                      ref={isToday ? (todayRef as React.RefObject<HTMLDivElement>) : undefined}
+                      className={[
+                        "aspect-square rounded-lg flex flex-col items-center justify-center",
+                        isToday ? "bg-[#C1443C]" : "",
+                      ].join(" ")}
+                    >
+                      <span className={[
+                        "tabular-nums font-bold leading-none",
+                        isToday ? "text-[14px] text-white" : "text-[11px] text-white/[0.06]",
+                      ].join(" ")}>
                         {cell.date.getDate()}
                       </span>
+                      {isToday && <span className="w-1 h-1 rounded-full bg-white/60 mt-1" />}
                     </div>
                   );
                 }
 
                 const { programDay } = cell.entry;
                 const status = getStatus(cell.entry, logs);
-                const isToday = status === "today";
-                const isSelected = viewDateStr === cell.dateStr;
                 const isRest = cell.entry.dayPlan.isRest;
 
-                const cellClass = {
-                  completed: "bg-blue-500/20 text-blue-300",
-                  today:     "bg-[#C1443C] text-white",
-                  missed:    "bg-white/[0.04] text-red-400/50",
-                  upcoming:  "bg-white/[0.04] text-white/30",
-                  rest:      "text-white/[0.08]",
-                }[status];
+                // Today always overrides to red, regardless of rest/status
+                const cellClass = isToday
+                  ? "bg-[#C1443C] text-white"
+                  : {
+                      completed: "bg-blue-500/20 text-blue-300",
+                      missed:    "bg-white/[0.04] text-red-400/50",
+                      upcoming:  "bg-white/[0.04] text-white/30",
+                      rest:      "text-white/[0.08]",
+                    }[status];
 
                 return (
                   <button
                     key={cell.dateStr}
-                    ref={isToday ? todayRef : undefined}
+                    ref={isToday ? (todayRef as React.RefObject<HTMLButtonElement>) : undefined}
                     onClick={() => onGoToDate(programDay, cell.dateStr)}
                     className={[
                       "relative aspect-square rounded-lg flex flex-col items-center justify-center transition-all duration-150",
-                      isRest ? "cursor-default" : "active:scale-90",
+                      isRest && !isToday ? "cursor-default" : "active:scale-90",
                       cellClass,
-                      isSelected && !isRest
+                      isSelected
                         ? "ring-2 ring-white/70 ring-offset-1 ring-offset-[#1C1C1E]"
                         : "",
                     ].join(" ")}
@@ -115,7 +128,6 @@ export function ProgramGrid({ weeks, viewDateStr, logs, onGoToDate }: ProgramGri
                     ].join(" ")}>
                       {cell.date.getDate()}
                     </span>
-                    {/* Dot under the date for today */}
                     {isToday && (
                       <span className="w-1 h-1 rounded-full bg-white/60 mt-1" />
                     )}

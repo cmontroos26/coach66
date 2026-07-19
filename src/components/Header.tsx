@@ -66,10 +66,9 @@ export function Header({
               onClick={() => {
                 if (window.confirm("Reset the whole 66-day program? This clears all logs.")) onReset();
               }}
-              className="text-[18px] leading-none text-neutral-700 hover:text-neutral-400 transition-colors"
-              title="Reset program"
+              className="text-[10px] font-bold tracking-[1.5px] uppercase text-neutral-600 hover:text-red-500 border border-white/[0.08] rounded px-2 py-1 transition-colors"
             >
-              ···
+              Reset
             </button>
           </div>
         </div>
