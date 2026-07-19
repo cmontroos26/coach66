@@ -224,9 +224,9 @@ export const ISOLATION_BY_PHASE: Record<string, Record<PhaseId, Exercise[]>> = {
 // compromise the next. Testing bench + squat + RDL all in one session means
 // the squat and RDL numbers will be artificially lower.
 //
-// Day 62 = upper body focus (push pattern in the rotation)  → bench + OHP
-// Day 64 = lower body focus (legs pattern)                  → squat + RDL
-// Day 66 = full benchmark repeat                            → bench + squat + RDL
+// Day 62 = lower body focus (legsCore in the rotation) → squat + RDL (legs fresh after Day 61 upper)
+// Day 64 = upper body focus (push in the rotation)     → bench + OHP (upper fresh after Day 63 rest)
+// Day 66 = full benchmark                              → bench + squat + RDL
 const TEST_UPPER: Exercise[] = [
   { id: "bench", name: "Barbell Bench Press — Test",           unit: "kg", defaultWeight: 40, step: 2.5, category: "compound" },
   { id: "ohp",   name: "Seated Barbell Overhead Press — Test", unit: "kg", defaultWeight: 25, step: 2.5, category: "compound" },
