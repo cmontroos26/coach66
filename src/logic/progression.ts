@@ -56,25 +56,40 @@ export function setPrescription(
   return { weight: clamp(base), reps: repLo, label: totalSets === 1 ? "Test" : "Work set" };
 }
 
-// Look back through all logged days for this exercise. If the last work set hit
-// the target rep floor, suggest +5%; otherwise hold weight.
+// Look back through all logged days for this exercise.
+// Uses the TOP SET (heaviest weight with reps logged) so warm-up sets
+// never accidentally stall or inflate the progression suggestion.
+//
+// Rules:
+//   • Exceeded rep ceiling (> repHi) → +7.5%  (had more in the tank)
+//   • Hit rep floor      (>= repLo)  → +5%    (earned the increase)
+//   • Below rep floor                → hold    (build reps first)
 export function suggestWeight(exerciseId: string, targetReps: string, logs: Logs): Suggestion {
+  const [repLo, repHi] = parseRepRange(targetReps);
   const days = Object.keys(logs).map(Number).sort((a, b) => b - a);
+
   for (const d of days) {
     const entries = logs[d]?.[exerciseId];
-    if (entries && entries.some(e => e.weight)) {
-      const numeric = entries
-        .filter(e => e.weight && e.reps)
-        .map(e => ({ w: parseFloat(e.weight), r: parseFloat(e.reps) }));
-      if (numeric.length === 0) continue;
-      const lastSet = numeric[numeric.length - 1];
-      if (isNaN(lastSet.w)) continue;
-      const workTargetReps = parseInt(String(targetReps).split("-")[0], 10) || 10;
-      if (lastSet.r >= workTargetReps) {
-        return { value: Math.round((lastSet.w + lastSet.w * 0.05) * 2) / 2, reason: "up ~5% — you hit your heaviest set's target last time" };
-      }
-      return { value: lastSet.w, reason: "hold — build reps on your top set before adding weight" };
+    if (!entries) continue;
+
+    const numeric = entries
+      .filter(e => e.weight && e.reps)
+      .map(e => ({ w: parseFloat(e.weight), r: parseFloat(e.reps) }))
+      .filter(e => !isNaN(e.w) && !isNaN(e.r) && e.w > 0);
+
+    if (numeric.length === 0) continue;
+
+    // Top set = heaviest weight logged that session
+    const top = numeric.reduce((best, cur) => cur.w > best.w ? cur : best);
+
+    if (top.r > repHi) {
+      return { value: roundToHalf(top.w * 1.075), reason: `up ~7.5% — you beat the rep ceiling last time (${top.r} reps)` };
     }
+    if (top.r >= repLo) {
+      return { value: roundToHalf(top.w * 1.05), reason: `up ~5% — you hit your target last time (${top.r} reps)` };
+    }
+    return { value: top.w, reason: `hold — hit ${repLo}+ reps before adding weight (got ${top.r} last time)` };
   }
+
   return { value: null, reason: "log your starting weight today" };
 }

@@ -77,7 +77,10 @@ export const PHASES: Phase[] = [
   { id: "peak",         label: "Peak & Test",  range: [58, 66], color: "#C9A25D", blurb: "Taper the junk volume. Retest what you started with." },
 ];
 
-export const DELOAD_RANGE: [number, number] = [47, 50];
+// Full 7-day deload cycle: covers push/pull/legs/rest/upper/legsCore/rest at reduced load.
+// Sitting at 4 days (47-50) was too short — the body needs the full week to absorb the
+// accumulated fatigue from Intensify before peaking.
+export const DELOAD_RANGE: [number, number] = [47, 53];
 
 export function getPhase(day: number): Phase {
   return PHASES.find(p => day >= p.range[0] && day <= p.range[1]) || PHASES[0];
@@ -217,11 +220,31 @@ export const ISOLATION_BY_PHASE: Record<string, Record<PhaseId, Exercise[]>> = {
   rest: { reactivation: [], rebuild: [], intensify: [], peak: [] },
 };
 
-const TEST_LIFTS: Exercise[] = [
-  { id: "bench", name: "Barbell Bench Press — Test", unit: "kg", defaultWeight: 40, step: 2.5, category: "compound" },
-  { id: "squat", name: "Back Squat — Test",          unit: "kg", defaultWeight: 50, step: 2.5, category: "compound" },
-  { id: "rdl",   name: "Romanian Deadlift — Test",   unit: "kg", defaultWeight: 40, step: 2.5, category: "compound" },
+// Test days are split by body region so CNS fatigue from one lift doesn't
+// compromise the next. Testing bench + squat + RDL all in one session means
+// the squat and RDL numbers will be artificially lower.
+//
+// Day 62 = upper body focus (push pattern in the rotation)  → bench + OHP
+// Day 64 = lower body focus (legs pattern)                  → squat + RDL
+// Day 66 = full benchmark repeat                            → bench + squat + RDL
+const TEST_UPPER: Exercise[] = [
+  { id: "bench", name: "Barbell Bench Press — Test",           unit: "kg", defaultWeight: 40, step: 2.5, category: "compound" },
+  { id: "ohp",   name: "Seated Barbell Overhead Press — Test", unit: "kg", defaultWeight: 25, step: 2.5, category: "compound" },
 ];
+const TEST_LOWER: Exercise[] = [
+  { id: "squat", name: "Back Squat — Test",        unit: "kg", defaultWeight: 50, step: 2.5, category: "compound" },
+  { id: "rdl",   name: "Romanian Deadlift — Test", unit: "kg", defaultWeight: 40, step: 2.5, category: "compound" },
+];
+const TEST_FULL: Exercise[] = [
+  { id: "bench", name: "Barbell Bench Press — Final Test", unit: "kg", defaultWeight: 40, step: 2.5, category: "compound" },
+  { id: "squat", name: "Back Squat — Final Test",          unit: "kg", defaultWeight: 50, step: 2.5, category: "compound" },
+  { id: "rdl",   name: "Romanian Deadlift — Final Test",   unit: "kg", defaultWeight: 40, step: 2.5, category: "compound" },
+];
+function testLiftsForDay(day: number): Exercise[] {
+  if (day === 62) return TEST_UPPER;
+  if (day === 64) return TEST_LOWER;
+  return TEST_FULL; // day 66
+}
 
 // ─── Prescription logic ───────────────────────────────────────────────────────
 
@@ -283,12 +306,12 @@ export function buildDayPlan(day: number): DayPlan {
 
   if (testDay) {
     const presc: Prescription = {
-      sets: 1, reps: "1-3 (find today's honest top)", rpe: "9", rest: "3 min",
+      sets: 1, reps: "1-3 (find today's honest top)", rpe: "9", rest: "4 min",
       note: "Warm up thoroughly. This is a test, not a max-out grind — stop if form breaks.",
     };
     return {
       day, phase, type, deload, testDay, isRest: false, finisher: null,
-      exercises: TEST_LIFTS.map(ex => ({ ...ex, ...presc })),
+      exercises: testLiftsForDay(day).map(ex => ({ ...ex, ...presc })),
     };
   }
 
