@@ -106,7 +106,7 @@ export function ProgramGrid({ weeks, viewDateStr, todayStr, logs, onGoToDate }: 
                   : isDay1
                   ? "bg-amber-500/40 text-amber-100 ring-1 ring-amber-400/60"
                   : {
-                      completed: "bg-blue-500/20 text-blue-300",
+                      completed: "bg-blue-500/40 text-blue-200",
                       missed:    "bg-red-900/30 text-red-400/70",
                       upcoming:  "bg-white/[0.07] text-white/30",
                       rest:      "text-white/[0.08]",
@@ -148,7 +148,7 @@ export function ProgramGrid({ weeks, viewDateStr, todayStr, logs, onGoToDate }: 
         {[
           { cls: "bg-[#C1443C]",                             label: "Today" },
           { cls: "bg-amber-500/40 ring-1 ring-amber-400/60", label: "Start" },
-          { cls: "bg-blue-500/20",                           label: "Done" },
+          { cls: "bg-blue-500/40",                           label: "Done" },
           { cls: "bg-red-900/30 ring-1 ring-red-500/30",     label: "Missed" },
           { cls: "bg-white/[0.12]",                          label: "Upcoming" },
         ].map(({ cls, label }) => (
