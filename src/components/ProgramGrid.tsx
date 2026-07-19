@@ -98,7 +98,7 @@ export function ProgramGrid({ weeks, viewDateStr, todayStr, logs, onGoToDate }: 
                 const status = getStatus(cell.entry, logs);
                 const isRest = cell.entry.dayPlan.isRest;
 
-                const isDay1 = !isToday && programDay === 1;
+                const isDay1 = !isToday && programDay === 1 && status === "upcoming";
 
                 // Today always overrides to red, regardless of rest/status
                 const cellClass = isToday
