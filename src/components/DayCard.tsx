@@ -1,6 +1,7 @@
 "use client";
 
 import { ExerciseBlock } from "./ExerciseBlock";
+import { WarmUpSection } from "./WarmUpSection";
 import { TYPE_LABEL } from "@/logic/program";
 import { suggestWeight } from "@/logic/progression";
 import type { DayPlan } from "@/logic/program";
@@ -41,8 +42,11 @@ export function DayCard({ plan, dayLogs, logs, onUpdateSet }: DayCardProps) {
         )}
       </div>
 
+      {/* Warm-up */}
+      <WarmUpSection type={plan.type} testDay={plan.testDay} deload={plan.deload} />
+
       {/* Exercises */}
-      <div className="mt-4">
+      <div className="mt-0">
         {plan.exercises.map(ex => (
           <ExerciseBlock
             key={ex.id}
