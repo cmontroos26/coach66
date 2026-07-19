@@ -44,3 +44,4 @@ Vercel project: `clinton-s-projects-13a80721/coach66`
 GitHub repo: `cmontroos26/coach66`
 
 Push to `main` → Vercel auto-deploys. Pull request branches get preview URLs automatically.
+
